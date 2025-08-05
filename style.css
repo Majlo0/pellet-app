@@ -1,0 +1,19 @@
+body {
+  font-family: sans-serif;
+  margin: 2rem;
+  max-width: 600px;
+}
+
+form {
+  margin-bottom: 20px;
+}
+
+input, button {
+  margin: 5px 0;
+  padding: 8px;
+  width: 100%;
+}
+
+canvas {
+  margin-top: 20px;
+}

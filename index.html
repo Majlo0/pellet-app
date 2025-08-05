@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <title>Zużycie Pelletu</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Zużycie pelletu</h1>
+
+  <form id="pelletForm">
+    <input type="date" id="date" required>
+    <input type="number" id="amount" placeholder="Ilość pelletu (kg)" required>
+    <button type="submit">Dodaj</button>
+  </form>
+
+  <label for="monthFilter">Wybierz miesiąc:</label>
+  <input type="month" id="monthFilter">
+
+  <canvas id="chart" width="400" height="200"></canvas>
+  <canvas id="monthlyChart" width="400" height="200"></canvas>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
