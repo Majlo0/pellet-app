@@ -96,3 +96,11 @@ const monthlyChart = new Chart(monthlyCtx, {
 });
 
 updateCharts();
+
+document.getElementById('clearDataBtn').addEventListener('click', () => {
+  if (confirm("Czy na pewno chcesz usunąć wszystkie dane?")) {
+    localStorage.removeItem('pelletData');
+    data = {};
+    updateCharts();
+  }
+});
