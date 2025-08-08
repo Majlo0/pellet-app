@@ -1,26 +1,50 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Zużycie Pelletu</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <h1>Zużycie pelletu</h1>
 
   <form id="pelletForm">
-    <input type="date" id="date" required>
-    <input type="number" id="amount" placeholder="Ilość pelletu (kg)" required>
+    <input type="date" id="date" required />
+    <input type="number" id="amount" placeholder="Ilość (kg)" required />
+    <input type="number" id="price" placeholder="Cena za kg (zł)" step="0.01" />
+    <input type="number" id="temperature" placeholder="Temperatura (°C)" step="0.1" />
     <button type="submit">Dodaj</button>
   </form>
+
   <button id="clearDataBtn">🧹 Wyczyść dane</button>
+  <button id="exportCSV">⬇️ Eksportuj do CSV</button>
 
+  <label for="monthFilter">📅 Filtrowanie miesiąca:</label>
+  <input type="month" id="monthFilter" />
 
-  <label for="monthFilter">Wybierz miesiąc:</label>
-  <input type="month" id="monthFilter">
+  <section id="stats">
+    <h2>📊 Statystyki</h2>
+    <p><strong>Suma (kg):</strong> <span id="sumTotal">0</span></p>
+    <p><strong>Średnia dzienna (kg):</strong> <span id="average">0</span></p>
+    <p><strong>Całkowity koszt (zł):</strong> <span id="totalCost">0</span></p>
+  </section>
 
-  <canvas id="chart" width="400" height="200"></canvas>
-  <canvas id="monthlyChart" width="400" height="200"></canvas>
+  <canvas id="dailyChart"></canvas>
+  <canvas id="monthlyChart"></canvas>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Data</th>
+        <th>Ilość</th>
+        <th>Cena/kg</th>
+        <th>Temp</th>
+        <th>Akcja</th>
+      </tr>
+    </thead>
+    <tbody id="dataTable"></tbody>
+  </table>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="script.js"></script>
