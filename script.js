@@ -1,106 +1,116 @@
 const form = document.getElementById('pelletForm');
-const dateInput = document.getElementById('date');
-const amountInput = document.getElementById('amount');
+const table = document.getElementById('dataTable');
+const clearBtn = document.getElementById('clearDataBtn');
+const exportBtn = document.getElementById('exportCSV');
 const monthFilter = document.getElementById('monthFilter');
 
 let data = JSON.parse(localStorage.getItem('pelletData')) || {};
 
-form.addEventListener('submit', (e) => {
+form.addEventListener('submit', e => {
   e.preventDefault();
-  const date = dateInput.value;
-  const amount = parseFloat(amountInput.value);
+  const date = document.getElementById('date').value;
+  const amount = parseFloat(document.getElementById('amount').value);
+  const price = parseFloat(document.getElementById('price').value) || null;
+  const temp = parseFloat(document.getElementById('temperature').value) || null;
+  data[date] = { amount, price, temperature: temp };
+  localStorage.setItem('pelletData', JSON.stringify(data));
+  form.reset();
+  render();
+});
 
-  if (date && amount) {
-    data[date] = (data[date] || 0) + amount;
-    localStorage.setItem('pelletData', JSON.stringify(data));
-    updateCharts();
-    form.reset();
+clearBtn.addEventListener('click', () => {
+  if (confirm("Czy na pewno usunąć wszystkie dane?")) {
+    localStorage.removeItem('pelletData');
+    data = {};
+    render();
   }
 });
 
-monthFilter.addEventListener('change', updateCharts);
+exportBtn.addEventListener('click', () => {
+  let csv = "Data,Ilość (kg),Cena/kg,Temperatura\n";
+  Object.entries(data).forEach(([date, val]) => {
+    csv += `${date},${val.amount},${val.price ?? ""},${val.temperature ?? ""}\n`;
+  });
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = "pellet_data.csv";
+  a.click();
+});
 
-function updateCharts() {
+monthFilter.addEventListener('change', render);
+
+function render() {
+  const tbody = table;
+  tbody.innerHTML = "";
   const selectedMonth = monthFilter.value;
-  const dailyLabels = [];
-  const dailyValues = [];
-  const monthlyTotals = {};
+  let labels = [], values = [], monthSum = {}, total = 0, cost = 0;
 
-  Object.keys(data).forEach(date => {
-    const value = data[date];
-    const [year, month, day] = date.split('-');
-    const monthKey = year + '-' + month;
-
-    // Dane dzienne w wybranym miesiącu
+  Object.entries(data).sort().forEach(([date, val]) => {
     if (!selectedMonth || date.startsWith(selectedMonth)) {
-      dailyLabels.push(date);
-      dailyValues.push(value);
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${date}</td>
+        <td>${val.amount}</td>
+        <td>${val.price ?? "-"}</td>
+        <td>${val.temperature ?? "-"}</td>
+        <td><button onclick="removeEntry('${date}')">Usuń</button></td>
+      `;
+      tbody.appendChild(row);
+      labels.push(date);
+      values.push(val.amount);
+      total += val.amount;
+      if (val.price) cost += val.amount * val.price;
     }
 
-    // Dane miesięczne
-    monthlyTotals[monthKey] = (monthlyTotals[monthKey] || 0) + value;
+    const [y, m] = date.split('-');
+    const ym = y + '-' + m;
+    monthSum[ym] = (monthSum[ym] || 0) + val.amount;
   });
 
-  // Aktualizacja wykresu dziennego
-  dailyChart.data.labels = dailyLabels;
-  dailyChart.data.datasets[0].data = dailyValues;
+  document.getElementById('sumTotal').textContent = total.toFixed(2);
+  document.getElementById('average').textContent = (values.length ? (total / values.length).toFixed(2) : "0");
+  document.getElementById('totalCost').textContent = cost.toFixed(2);
+
+  dailyChart.data.labels = labels;
+  dailyChart.data.datasets[0].data = values;
   dailyChart.update();
 
-  // Aktualizacja wykresu miesięcznego
-  const sortedMonths = Object.keys(monthlyTotals).sort();
-  const monthlyValues = sortedMonths.map(month => monthlyTotals[month]);
-
-  monthlyChart.data.labels = sortedMonths;
-  monthlyChart.data.datasets[0].data = monthlyValues;
+  monthlyChart.data.labels = Object.keys(monthSum);
+  monthlyChart.data.datasets[0].data = Object.values(monthSum);
   monthlyChart.update();
 }
 
-const dailyCtx = document.getElementById('chart').getContext('2d');
-const dailyChart = new Chart(dailyCtx, {
+function removeEntry(date) {
+  delete data[date];
+  localStorage.setItem('pelletData', JSON.stringify(data));
+  render();
+}
+
+const dailyChart = new Chart(document.getElementById('dailyChart'), {
   type: 'bar',
   data: {
     labels: [],
     datasets: [{
       label: 'Zużycie dzienne (kg)',
       data: [],
-      backgroundColor: 'rgba(0, 123, 255, 0.5)',
-      borderColor: 'rgba(0, 123, 255, 1)',
-      borderWidth: 1
+      backgroundColor: 'rgba(0, 123, 255, 0.5)'
     }]
   },
-  options: {
-    scales: {
-      y: { beginAtZero: true }
-    }
-  }
+  options: { responsive: true, scales: { y: { beginAtZero: true } } }
 });
 
-const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
-const monthlyChart = new Chart(monthlyCtx, {
+const monthlyChart = new Chart(document.getElementById('monthlyChart'), {
   type: 'bar',
   data: {
     labels: [],
     datasets: [{
       label: 'Zużycie miesięczne (kg)',
       data: [],
-      backgroundColor: 'rgba(40, 167, 69, 0.5)',
-      borderColor: 'rgba(40, 167, 69, 1)',
-      borderWidth: 1
+      backgroundColor: 'rgba(40, 167, 69, 0.5)'
     }]
   },
-  options: {
-    scales: {
-      y: { beginAtZero: true }
-    }
-  }
+  options: { responsive: true, scales: { y: { beginAtZero: true } } }
 });
 
-updateCharts();
-
-document.getElementById('clearDataBtn').addEventListener('click', () => {
-  if (confirm("Czy na pewno chcesz usunąć wszystkie dane?")) {
-    localStorage.removeItem('pelletData');
-    data = {};
-    updateCharts();
-  }
-});
+render();
